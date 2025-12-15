@@ -1,0 +1,60 @@
+.eater-input {
+  margin-bottom: 8px;
+  width: 100px;
+}
+
+.food-input {
+  margin-bottom: 8px;
+  width: 200px;
+}
+.delete-button {
+  color: black;
+  background-color: red;
+  margin-bottom: 4px;
+  cursor: pointer;
+}
+
+.wrapper {
+  display: grid;
+
+  grid-template-columns: repeat(20, 1fr);
+  grid-auto-rows: 100px;
+}
+
+.wrapper div {
+  border: 1px solid;
+  grid-column: span 2;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.wrapper .h {
+  grid-column: span 6;
+}
+
+.wrapper .result {
+  grid-column: span 8;
+}
+
+.wrapper .eater-list {
+  grid-column: span 6;
+}
+
+.wrapper .a {
+  grid-column: span 10;
+}
+
+.wrapper .a1 {
+  grid-column: span 20;
+}
+
+.wrapper .a2 {
+  grid-row: span 5;
+}
+
+.wrapper .a9,
+.wrapper .a10 {
+  grid-column: span 5;
+}
