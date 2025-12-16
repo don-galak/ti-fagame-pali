@@ -2,16 +2,33 @@ import "./index.css";
 
 const Iteration4 = ({
   currentEater,
-  currentFood,
   handleSubmit,
   handleSubmitFood,
   handleDelete,
   handleDeleteFood,
   eaters,
-  foods,
   onChangeEater,
-  onChangeFood,
+  foodInfo,
 }) => {
+  const foodSubmitHandler = (ref, accessor) => {
+    ref.onsubmit = async (e) => {
+      e.preventDefault();
+      const formData = new FormData(ref);
+      const data = {
+        foodName: formData.get("foodName"),
+        foodPrice: formData.get("foodPrice"),
+        foodPeople: formData.getAll("foodPeople"),
+      };
+      console.log('foodSubmitHandler', data);
+      accessor()(data);
+      // ref.reset();
+    };
+  };
+
+  const onSubmitFood = (data) => {
+    handleSubmitFood(data);
+  };
+
   return (
     <div class="container">
       <h2>Food & Eaters</h2>
@@ -69,33 +86,44 @@ const Iteration4 = ({
             <span class="badge">Add foods</span>
           </div>
 
-          <div class="field">
-            <label for="foodInput">Enter food</label>
-            <input id="foodInput" type="text" placeholder="e.g. Pizza" />
-          </div>
+          <form use:foodSubmitHandler={onSubmitFood}>
+            <div class="field">
+              <input
+                name="foodName"
+                id="foodInput"
+                type="text"
+                placeholder="e.g. Pizza"
+              />
+            </div>
 
-          <div class="field">
-            <label for="priceInput">Enter price</label>
-            <input
-              id="priceInput"
-              type="number"
-              step="0.01"
-              placeholder="e.g. 12.50"
-            />
-          </div>
+            <div class="field">
+              <input
+                name="foodPrice"
+                id="priceInput"
+                type="number"
+                step="0.01"
+                placeholder="e.g. 12.50"
+              />
+            </div>
 
-          <div class="field">
-            <label for="namesSelect">People who ate it</label>
-            <select id="namesSelect">
-              <option value="john">John</option>
-              <option value="maria">Maria</option>
-              <option value="alex">Alex</option>
-            </select>
-          </div>
+            <div class="field">
+              <label>Who ate it?</label>
+              <div class="checkbox-group">
+                <For each={eaters()}>
+                  {(eater) => (
+                    <label class="checkbox-item">
+                      <input type="checkbox" name='foodPeople' value={eater} />
+                      <span>{eater}</span>
+                    </label>
+                  )}
+                </For>
+              </div>
+            </div>
 
-          <button class="btn btn-primary" type="button">
-            Add food
-          </button>
+            <button class="btn btn-primary" type="submit">
+              Add food
+            </button>
+          </form>
         </section>
       </div>
 
@@ -108,25 +136,19 @@ const Iteration4 = ({
         </div>
 
         <ul class="list" aria-label="Foods list">
-          <li class="list-item">
-            <div class="item-left">
-              <span class="item-title">Pizza</span>
-              <span class="item-meta">€12.50 • Eaten by: John, Maria</span>
-            </div>
-            <button class="btn btn-danger" type="button">
-              Delete
-            </button>
-          </li>
-
-          <li class="list-item">
-            <div class="item-left">
-              <span class="item-title">Souvlaki</span>
-              <span class="item-meta">€9.00 • Eaten by: Alex</span>
-            </div>
-            <button class="btn btn-danger" type="button">
-              Delete
-            </button>
-          </li>
+          <For each={foodInfo}>
+            {(food, index) => (
+              <li class="list-item">
+                <div class="item-left">
+                  <span class="item-title">{food.foodName}</span>
+                  <span class="item-meta">€{food.foodPrice} • Eaten by: {food.foodPeople.join(', ')}</span>
+                </div>
+                <button class="btn btn-danger" type="button" onClick={() => handleDeleteFood(index())}>
+                  Delete
+                </button>
+              </li>
+            )}
+          </For>
         </ul>
       </section>
     </div>
