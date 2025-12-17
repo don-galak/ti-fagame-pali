@@ -202,25 +202,66 @@ const Iteration4 = ({
 
       <div class="divider"></div>
 
-      <section class="card" aria-label="Foods List Section">
+      <section class="card amounts-card" aria-label="Amounts Section">
         <div class="card-title">
-          <h3>Splitted amounts per person</h3>
-          <span class="badge">Amounts</span>
+          <h3>Split amounts per person</h3>
+          <span class="badge badge-green">💰 Summary</span>
         </div>
 
-        <ul class="list" aria-label="Foods list">
-          <For each={splitAmountsPerPerson()}>
-            {([person, amount]) => (
-              <li class="list-item">
-                <div class="item-left">
-                  <span class="item-meta">
-                    {person}: {amount}€
-                  </span>
-                </div>
-              </li>
-            )}
-          </For>
-        </ul>
+        <Show
+          when={splitAmountsPerPerson().length > 0}
+          fallback={
+            <div class="amounts-empty">
+              <span class="amounts-empty-icon">🧮</span>
+              <span>Add eaters and foods to see the split</span>
+            </div>
+          }
+        >
+          <div class="amounts-grid">
+            <For each={splitAmountsPerPerson()}>
+              {([person, amount]) => {
+                const maxAmount = Math.max(
+                  ...splitAmountsPerPerson().map(([, a]) => a),
+                  1
+                );
+                const percentage = (amount / maxAmount) * 100;
+                return (
+                  <div class="amount-card">
+                    <div class="amount-header">
+                      <span
+                        class="amount-avatar"
+                        style={`--hue: ${(person.charCodeAt(0) * 7) % 360}`}
+                      >
+                        {person.charAt(0).toUpperCase()}
+                      </span>
+                      <span class="amount-name">{person}</span>
+                    </div>
+                    <div class="amount-bar-container">
+                      <div
+                        class="amount-bar"
+                        style={`width: ${percentage}%; --hue: ${(person.charCodeAt(0) * 7) % 360}`}
+                      />
+                    </div>
+                    <div class="amount-value">
+                      <span class="amount-currency">€</span>
+                      <span class="amount-number">{amount.toFixed(2)}</span>
+                    </div>
+                  </div>
+                );
+              }}
+            </For>
+          </div>
+
+          <div class="amounts-total">
+            <span class="total-label">Total</span>
+            <span class="total-value">
+              €
+              {splitAmountsPerPerson()
+                .reduce((sum, [, amount]) => sum + amount, 0)
+                .toFixed(2)}
+            </span>
+          </div>
+        </Show>
       </section>
     </div>
   );
