@@ -19,7 +19,6 @@ const Iteration4 = ({
         price: formData.get("price"),
         people: formData.getAll("people"),
       };
-      console.log("foodSubmitHandler", data);
       accessor()(data);
       // ref.reset();
     };
@@ -45,7 +44,7 @@ const Iteration4 = ({
       }
     }
 
-    return amountsToPay;
+    return Object.entries(amountsToPay);
   };
 
   return (
@@ -174,7 +173,19 @@ const Iteration4 = ({
           <span class="badge">Amounts</span>
         </div>
 
-        <code>{JSON.stringify(splitAmountsPerPerson())}</code>
+        <ul class="list" aria-label="Foods list">
+          <For each={splitAmountsPerPerson()}>
+            {([person, amount]) => (
+              <li class="list-item">
+                <div class="item-left">
+                  <span class="item-meta">
+                    {person}: {amount}€
+                  </span>
+                </div>
+              </li>
+            )}
+          </For>
+        </ul>
       </section>
     </div>
   );
