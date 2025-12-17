@@ -173,40 +173,175 @@ select:focus {
   line-height: 1.35;
 }
 
+/* Checkbox Group - People Selection */
+.field-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #4b5563;
+  margin-bottom: 4px;
+}
+
 .checkbox-group {
   display: flex;
   flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 12px;
+  border: 1px dashed #e2e8f0;
+  min-height: 60px;
+}
+
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 8px;
+  width: 100%;
+  padding: 16px;
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.empty-icon {
+  font-size: 20px;
+  opacity: 0.7;
 }
 
 .checkbox-item {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  border: 1px solid #cfd6e4;
-  border-radius: 8px;
+  gap: 10px;
+  padding: 10px 14px 10px 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
   cursor: pointer;
   font-size: 14px;
-  background: #fbfcff;
-  transition: all 0.15s ease;
+  background: #fff;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  position: relative;
 }
 
 .checkbox-item:hover {
-  border-color: #4a90e2;
-  background: #f0f6ff;
+  border-color: #94a3b8;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
 }
 
 .checkbox-item:has(input:checked) {
-  border-color: #4a90e2;
-  background: #eef5ff;
+  border-color: #3b82f6;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
 }
 
 .checkbox-item input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  accent-color: #4a90e2;
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.checkbox-custom {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #cbd5e1;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  background: #fff;
+}
+
+.checkbox-custom svg {
+  width: 10px;
+  height: 10px;
+  color: #fff;
+  opacity: 0;
+  transform: scale(0.5);
+  transition: all 0.15s ease;
+}
+
+.checkbox-item:has(input:checked) .checkbox-custom {
+  background: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.checkbox-item:has(input:checked) .checkbox-custom svg {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.checkbox-item:hover .checkbox-custom {
+  border-color: #94a3b8;
+}
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: hsl(var(--hue, 200), 70%, 92%);
+  color: hsl(var(--hue, 200), 60%, 35%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  border: 2px solid hsl(var(--hue, 200), 60%, 85%);
+}
+
+.eater-name {
+  font-weight: 500;
+  color: #334155;
+  white-space: nowrap;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.checkbox-item:has(input:checked) .eater-name {
+  color: #1e40af;
+}
+
+.delete-btn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.15s ease;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.checkbox-item:hover .delete-btn {
+  opacity: 1;
+}
+
+.delete-btn svg {
+  width: 14px;
+  height: 14px;
+  color: #94a3b8;
+  transition: color 0.15s ease;
+}
+
+.delete-btn:hover {
+  background: #fee2e2;
+}
+
+.delete-btn:hover svg {
+  color: #dc2626;
 }
 
 @media (max-width: 900px) {

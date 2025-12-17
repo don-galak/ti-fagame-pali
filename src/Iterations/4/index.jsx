@@ -104,26 +104,61 @@ const Iteration4 = ({
             </div>
 
             <div class="field">
-              <p>Who ate it?</p>
+              <p class="field-label">Who ate it?</p>
               <div class="checkbox-group">
-                <For each={eaters()}>
-                  {(eater) => (
-                    <label class="checkbox-item">
-                      <input type="checkbox" name="people" value={eater} />
-                      <span>{eater}</span>
-                      <button
-                        type="button"
-                        class="btn btn-danger delete-eater"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleDeleteEater(eater);
-                        }}
-                      >
-                        X
-                      </button>
-                    </label>
-                  )}
-                </For>
+                <Show
+                  when={eaters().length > 0}
+                  fallback={
+                    <div class="empty-state">
+                      <span class="empty-icon">👥</span>
+                      <span>No eaters yet. Add someone above!</span>
+                    </div>
+                  }
+                >
+                  <For each={eaters()}>
+                    {(eater) => (
+                      <label class="checkbox-item">
+                        <input type="checkbox" name="people" value={eater} />
+                        <span class="checkbox-custom">
+                          <svg viewBox="0 0 12 10" fill="none">
+                            <path
+                              d="M1 5L4.5 8.5L11 1"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            />
+                          </svg>
+                        </span>
+                        <span
+                          class="avatar"
+                          style={`--hue: ${(eater.charCodeAt(0) * 7) % 360}`}
+                        >
+                          {eater.charAt(0).toUpperCase()}
+                        </span>
+                        <span class="eater-name">{eater}</span>
+                        <button
+                          type="button"
+                          class="delete-btn"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleDeleteEater(eater);
+                          }}
+                          title={`Remove ${eater}`}
+                        >
+                          <svg viewBox="0 0 16 16" fill="none">
+                            <path
+                              d="M12 4L4 12M4 4L12 12"
+                              stroke="currentColor"
+                              stroke-width="1.5"
+                              stroke-linecap="round"
+                            />
+                          </svg>
+                        </button>
+                      </label>
+                    )}
+                  </For>
+                </Show>
               </div>
             </div>
 
