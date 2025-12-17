@@ -84,23 +84,27 @@ const Iteration4 = ({
           </div>
 
           <form use:foodSubmitHandler={onSubmitFood}>
-            <div class="field">
-              <input
-                name="food"
-                id="foodInput"
-                type="text"
-                placeholder="e.g. Pizza"
-              />
-            </div>
+            <div class="form-row">
+              <div class="field">
+                <label for="foodInput">Food name</label>
+                <input
+                  name="food"
+                  id="foodInput"
+                  type="text"
+                  placeholder="e.g. Pizza"
+                />
+              </div>
 
-            <div class="field">
-              <input
-                name="price"
-                id="priceInput"
-                type="number"
-                step="0.01"
-                placeholder="e.g. 12.50"
-              />
+              <div class="field">
+                <label for="priceInput">Price (€)</label>
+                <input
+                  name="price"
+                  id="priceInput"
+                  type="number"
+                  step="0.01"
+                  placeholder="12.50"
+                />
+              </div>
             </div>
 
             <div class="field">
