@@ -22,7 +22,7 @@ const App = () => {
     setCurrentEater("");
   };
 
-  const handleDelete = (eater) => {
+  const handleDeleteEater = (eater) => {
     setEaters(eaters().filter((e) => e !== eater));
   };
 
@@ -41,7 +41,7 @@ const App = () => {
       onChangeEater={onChangeEater}
       handleSubmit={handleSubmit}
       handleSubmitFood={handleSubmitFood}
-      handleDelete={handleDelete}
+      handleDeleteEater={handleDeleteEater}
       handleDeleteFood={handleDeleteFood}
       foodInfo={foodInfo}
     />
