@@ -1,6 +1,7 @@
+import { For, Show } from "solid-js";
 import "./index.css";
 
-const Iteration4 = ({
+const Form = ({
   currentEater,
   handleSubmit,
   handleSubmitFood,
@@ -223,36 +224,23 @@ const Iteration4 = ({
         >
           <div class="amounts-grid">
             <For each={splitAmountsPerPerson()}>
-              {([person, amount]) => {
-                const maxAmount = Math.max(
-                  ...splitAmountsPerPerson().map(([, a]) => a),
-                  1
-                );
-                const percentage = (amount / maxAmount) * 100;
-                return (
-                  <div class="amount-card">
-                    <div class="amount-header">
-                      <span
-                        class="amount-avatar"
-                        style={`--hue: ${(person.charCodeAt(0) * 7) % 360}`}
-                      >
-                        {person.charAt(0).toUpperCase()}
-                      </span>
-                      <span class="amount-name">{person}</span>
-                    </div>
-                    <div class="amount-bar-container">
-                      <div
-                        class="amount-bar"
-                        style={`width: ${percentage}%; --hue: ${(person.charCodeAt(0) * 7) % 360}`}
-                      />
-                    </div>
-                    <div class="amount-value">
-                      <span class="amount-currency">€</span>
-                      <span class="amount-number">{amount.toFixed(2)}</span>
-                    </div>
+              {([person, amount]) => (
+                <div class="amount-card">
+                  <div class="amount-header">
+                    <span
+                      class="amount-avatar"
+                      style={`--hue: ${(person.charCodeAt(0) * 7) % 360}`}
+                    >
+                      {person.charAt(0).toUpperCase()}
+                    </span>
+                    <span class="amount-name">{person}</span>
                   </div>
-                );
-              }}
+                  <div class="amount-value">
+                    <span class="amount-currency">€</span>
+                    <span class="amount-number">{amount.toFixed(2)}</span>
+                  </div>
+                </div>
+              )}
             </For>
           </div>
 
@@ -271,4 +259,4 @@ const Iteration4 = ({
   );
 };
 
-export default Iteration4;
+export default Form;

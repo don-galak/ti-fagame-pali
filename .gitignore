@@ -13,6 +13,9 @@ app.config.timestamp_*.js
 # dependencies
 /node_modules
 
+# build
+root
+
 # IDEs and editors
 /.idea
 .project

@@ -1,6 +1,6 @@
 import { createSignal } from "solid-js";
 import { createStore } from "solid-js/store";
-import Iteration4 from "./Iterations/4";
+import Form from "./Form";
 
 const App = () => {
   const [currentEater, setCurrentEater] = createSignal("");
@@ -35,7 +35,7 @@ const App = () => {
   };
 
   return (
-    <Iteration4
+    <Form
       currentEater={currentEater}
       eaters={eaters}
       onChangeEater={onChangeEater}
