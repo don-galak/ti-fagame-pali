@@ -1,5 +1,5 @@
 {
-  "name": "vite-template-solid",
+  "name": "ti-fagame-pali",
   "version": "0.0.0",
   "description": "",
   "type": "module",
@@ -7,10 +7,12 @@
     "start": "vite",
     "dev": "vite",
     "build": "vite build",
-    "serve": "vite preview"
+    "serve": "vite preview",
+    "deploy": "gh-pages -d root"
   },
   "license": "MIT",
   "devDependencies": {
+    "gh-pages": "^6.3.0",
     "solid-devtools": "^0.34.3",
     "typescript": "^5.7.2",
     "vite": "^7.1.4",
