@@ -14,7 +14,7 @@ app.config.timestamp_*.js
 /node_modules
 
 # build
-#root
+root
 
 # IDEs and editors
 /.idea
