@@ -561,6 +561,7 @@ select:focus {
   font-variant-numeric: tabular-nums;
 }
 
+/* Tablet breakpoint */
 @media (max-width: 900px) {
   .container {
     width: 100%;
@@ -570,5 +571,232 @@ select:focus {
   }
   .amounts-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Large mobile / small tablet breakpoint */
+@media (max-width: 600px) {
+  body {
+    padding: 16px 12px;
+  }
+
+  .container {
+    padding: 20px 16px;
+    border-radius: 16px;
+  }
+
+  h2 {
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+
+  .card {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .card-title {
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .card-title h3 {
+    font-size: 13px;
+  }
+
+  .badge {
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .form-row .field {
+    margin-bottom: 14px;
+  }
+
+  .row {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .row > input {
+    width: 100%;
+  }
+
+  .row .btn {
+    width: 100%;
+  }
+
+  .btn {
+    padding: 14px 16px;
+    font-size: 14px;
+    border-radius: 10px;
+  }
+
+  input,
+  select {
+    padding: 14px 12px;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  .checkbox-group {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .checkbox-item {
+    padding: 8px 10px 8px 8px;
+    gap: 8px;
+    border-radius: 10px;
+  }
+
+  .avatar {
+    width: 24px;
+    height: 24px;
+    font-size: 11px;
+  }
+
+  .eater-name {
+    max-width: 80px;
+    font-size: 13px;
+  }
+
+  .delete-btn {
+    opacity: 1; /* Always show on mobile for better touch access */
+  }
+
+  .list-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .list-item .btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .item-title {
+    font-size: 14px;
+  }
+
+  .item-meta {
+    font-size: 12px;
+  }
+
+  .amount-card {
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  .amount-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 13px;
+  }
+
+  .amount-name {
+    font-size: 14px;
+  }
+
+  .amount-number {
+    font-size: 20px;
+  }
+
+  .amount-currency {
+    font-size: 12px;
+  }
+
+  .amounts-total {
+    padding: 14px 16px;
+    border-radius: 12px;
+    margin-top: 12px;
+  }
+
+  .total-label {
+    font-size: 12px;
+  }
+
+  .total-value {
+    font-size: 18px;
+  }
+
+  .divider {
+    margin: 20px 0;
+  }
+
+  .hint {
+    font-size: 11px;
+  }
+}
+
+/* Small mobile breakpoint */
+@media (max-width: 380px) {
+  body {
+    padding: 8px;
+  }
+
+  .container {
+    padding: 16px 12px;
+    border-radius: 12px;
+  }
+
+  h2 {
+    font-size: 18px;
+  }
+
+  .card {
+    padding: 12px;
+  }
+
+  .card-title h3 {
+    font-size: 12px;
+  }
+
+  .checkbox-item {
+    padding: 6px 8px;
+    gap: 6px;
+  }
+
+  .avatar {
+    width: 22px;
+    height: 22px;
+    font-size: 10px;
+  }
+
+  .eater-name {
+    max-width: 60px;
+    font-size: 12px;
+  }
+
+  .checkbox-custom {
+    width: 16px;
+    height: 16px;
+  }
+
+  .amount-card {
+    padding: 12px;
+  }
+
+  .amount-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+
+  .amount-number {
+    font-size: 18px;
+  }
+
+  .amounts-total {
+    flex-direction: column;
+    gap: 4px;
+    text-align: center;
   }
 }
