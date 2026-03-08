@@ -1,4 +1,4 @@
-import { createSignal, For, Show } from "solid-js";
+import { For, Show } from "solid-js";
 import "./index.css";
 
 const Form = ({
@@ -12,13 +12,6 @@ const Form = ({
   onChangeEater,
   foodInfo,
 }) => {
-  const [shareLabel, setShareLabel] = createSignal("Share link");
-
-  const onShare = async () => {
-    const copied = await handleShare();
-    setShareLabel(copied ? "Copied!" : "Link updated!");
-    setTimeout(() => setShareLabel("Share link"), 2000);
-  };
   const foodSubmitHandler = (ref, accessor) => {
     ref.onsubmit = async (e) => {
       e.preventDefault();
@@ -60,7 +53,7 @@ const Form = ({
     <div class="container">
       <div class="header-row">
         <h2>Food & Eaters</h2>
-        <button class="btn btn-share" type="button" onClick={onShare}>
+        <button class="btn btn-share" type="button" onClick={handleShare}>
           <svg
             viewBox="0 0 24 24"
             fill="none"
@@ -75,7 +68,7 @@ const Form = ({
             <polyline points="16 6 12 2 8 6" />
             <line x1="12" y1="2" x2="12" y2="15" />
           </svg>
-          {shareLabel()}
+          Share link
         </button>
       </div>
 

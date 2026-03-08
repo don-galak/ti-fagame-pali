@@ -1,29 +1,38 @@
-import { createSignal } from "solid-js";
+import { createSignal, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import Form from "./Form";
-/* Serialize eaters and foodInfo as Base64 JSON in the URL hash
-fragment so users can share a pre-filled form with a single link.
-On load, the app decodes the hash and hydrates the signals/store.
-A "Share link" button copies the full URL to the clipboard with
-brief visual feedback.
- */
+import Toast from "./Toast";
+
+function toBase64(str) {
+  const bytes = new TextEncoder().encode(str);
+  const binary = Array.from(bytes, (b) => String.fromCharCode(b)).join("");
+  return btoa(binary);
+}
+
+function fromBase64(encoded) {
+  const binary = atob(encoded);
+  const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+}
+
 function decodeHashState() {
+  const hash = window.location.hash.slice(1);
+  if (!hash) return { state: null, error: null };
   try {
-    const hash = window.location.hash.slice(1);
-    if (!hash) return null;
-    const json = atob(hash);
+    const json = fromBase64(hash);
     const state = JSON.parse(json);
     if (Array.isArray(state.eaters) && Array.isArray(state.foodInfo)) {
-      return state;
+      return { state, error: null };
     }
+    return { state: null, error: "Shared link data is incomplete or invalid." };
   } catch {
-    // ignore malformed hash
+    return { state: null, error: "Could not read the shared link — it may be corrupted." };
   }
-  return null;
 }
 
 const App = () => {
-  const restored = decodeHashState();
+  const { state: restored, error: hashError } = decodeHashState();
+  const [toastMessage, setToastMessage] = createSignal(hashError);
 
   const [currentEater, setCurrentEater] = createSignal("");
   const [eaters, setEaters] = createSignal(restored?.eaters ?? []);
@@ -56,31 +65,48 @@ const App = () => {
     setFoodInfo(foodInfo.filter((_, index) => index !== foodIndex));
   };
 
+  const showToast = (msg) => {
+    setToastMessage(null);
+    queueMicrotask(() => setToastMessage(msg));
+  };
+
   const handleShare = async () => {
-    const state = { eaters: eaters(), foodInfo: [...foodInfo] };
-    const hash = btoa(JSON.stringify(state));
-    window.location.hash = hash;
-    const url = window.location.href;
     try {
-      await navigator.clipboard.writeText(url);
-      return true;
+      const state = { eaters: eaters(), foodInfo: [...foodInfo] };
+      const hash = toBase64(JSON.stringify(state));
+      window.location.hash = hash;
+      const url = window.location.href;
+      try {
+        await navigator.clipboard.writeText(url);
+        showToast("Link copied to clipboard!");
+      } catch {
+        showToast("Link updated in the address bar.");
+      }
     } catch {
-      return false;
+      showToast("Something went wrong while creating the share link.");
     }
   };
 
   return (
-    <Form
-      currentEater={currentEater}
-      eaters={eaters}
-      onChangeEater={onChangeEater}
-      handleSubmit={handleSubmit}
-      handleSubmitFood={handleSubmitFood}
-      handleDeleteEater={handleDeleteEater}
-      handleDeleteFood={handleDeleteFood}
-      handleShare={handleShare}
-      foodInfo={foodInfo}
-    />
+    <>
+      <Show when={toastMessage()}>
+        <Toast
+          message={toastMessage()}
+          onDone={() => setToastMessage(null)}
+        />
+      </Show>
+      <Form
+        currentEater={currentEater}
+        eaters={eaters}
+        onChangeEater={onChangeEater}
+        handleSubmit={handleSubmit}
+        handleSubmitFood={handleSubmitFood}
+        handleDeleteEater={handleDeleteEater}
+        handleDeleteFood={handleDeleteFood}
+        handleShare={handleShare}
+        foodInfo={foodInfo}
+      />
+    </>
   );
 };
 
