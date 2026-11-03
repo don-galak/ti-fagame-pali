@@ -1,36 +1,79 @@
-## Usage
+# Ti fagame pali
 
-Those templates dependencies are maintained via [pnpm](https://pnpm.io) via `pnpm up -Lri`.
+A small [SolidJS](https://solidjs.com) app for splitting a bill: add the people who ate, add each food item with its price and who shared it, and get a shareable link showing what everyone owes.
 
-This is the reason you see a `pnpm-lock.yaml`. That being said, any package manager will work. This file can be safely be removed once you clone a template.
+## Requirements
+
+| Tool | Version | Notes |
+| --- | --- | --- |
+| Node.js | `v26.13.0` (see [`.nvmrc`](.nvmrc)) | Vite 7 needs at least 20.19 or 22.12 |
+| pnpm | `12.16.1` | Same version CI uses |
+
+## Local setup
+
+### 1. Install Node with nvm
+
+If you don't have [nvm](https://github.com/nvm-sh/nvm) yet, install it first. Then, from the repo folder:
 
 ```bash
-$ npm install # or pnpm install or yarn install
+nvm install   # reads .nvmrc and installs that Node version
+nvm use       # switches the current shell to it
+node -v       # should print v26.13.0
 ```
 
-### Learn more on the [Solid Website](https://solidjs.com) and come chat with us on our [Discord](https://discord.com/invite/solidjs)
+### 2. Install pnpm
 
-## Available Scripts
+Install pnpm for that Node version:
 
-In the project directory, you can run:
+```bash
+npm i -g pnpm@12.16.1
+pnpm -v       # should print 12.16.1
+```
 
-### `npm run dev` or `npm start`
+> With nvm, global packages belong to one Node version. If you switch Node versions later, install pnpm again.
 
-Runs the app in the development mode.<br>
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+### 3. Install dependencies
 
-The page will reload if you make edits.<br>
+```bash
+pnpm install
+```
 
-### `npm run build`
+### 4. Run the dev server
 
-Builds the app for production to the `dist` folder.<br>
-It correctly bundles Solid in production mode and optimizes the build for the best performance.
+```bash
+pnpm dev
+```
 
-The build is minified and the filenames include the hashes.<br>
-Your app is ready to be deployed!
+Open <http://localhost:3000/ti-fagame-pali/>. The `/ti-fagame-pali/` path is required because Vite's `base` is set for GitHub Pages. The page reloads when you save a file.
+
+## Scripts
+
+| Command | What it does |
+| --- | --- |
+| `pnpm dev` / `pnpm start` | Starts the dev server on port 3000 |
+| `pnpm build` | Builds for production into the `root/` folder |
+| `pnpm serve` | Serves the production build locally, so you can check it before deploying |
+| `pnpm run deploy` | Publishes `root/` to the `gh-pages` branch manually. Use `run` here, because plain `pnpm deploy` is a different built-in pnpm command |
 
 ## Deployment
 
-You can deploy the `dist` folder to any static host provider (netlify, surge, now, etc.)
+Every push to `main` triggers [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml). It builds the app with pnpm 12 and the Node version in `.nvmrc`, then publishes it to GitHub Pages:
 
-## This project was created with the [Solid CLI](https://github.com/solidjs-community/solid-cli)
+<https://don-galak.github.io/ti-fagame-pali/>
+
+## Troubleshooting
+
+**`You are using Node.js 18.x` or `crypto.hash is not a function` when running `pnpm dev`**
+
+pnpm is running Vite on an old Node version, even if `node -v` shows the right one. pnpm starts scripts with the Node it is running on itself, so check:
+
+```bash
+which -a pnpm        # should point into ~/.nvm/versions/node/v26.13.0/bin
+pnpm exec node -v    # the Node your scripts actually get
+```
+
+If `pnpm` resolves to a shim from another version manager (for example `~/.asdf/shims/pnpm`), remove that copy (`asdf plugin remove pnpm`), then install pnpm again with npm as in step 2 and run `hash -r`.
+
+**`Password authentication is not supported` when pushing**
+
+GitHub no longer accepts account passwords for Git over HTTPS. Log in with the GitHub CLI (`gh auth login` and then `gh auth setup-git`), or use a personal access token or an SSH key instead.
