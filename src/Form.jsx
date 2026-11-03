@@ -88,6 +88,12 @@ const Form = ({
                 placeholder="e.g. John"
                 value={currentEater()}
                 onChange={onChangeEater}
+                onkeydown={event => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    handleSubmit();
+                  }
+                }}
               />
               <button
                 class="btn btn-primary"
