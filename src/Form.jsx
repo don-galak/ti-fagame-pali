@@ -88,7 +88,7 @@ const Form = ({
                 placeholder="e.g. John"
                 value={currentEater()}
                 onChange={onChangeEater}
-                onkeydown={event => {
+                onkeyup={event => {
                   if (event.key === "Enter") {
                     event.preventDefault();
                     handleSubmit();
