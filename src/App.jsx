@@ -44,13 +44,10 @@ const App = () => {
   };
 
   const handleSubmit = () => {
-    if (eaters().includes(currentEater())) {
-      setCurrentEater("");
-      return;
-    }
-
-    setEaters([...eaters(), currentEater()]);
+    const name = currentEater().trim();
     setCurrentEater("");
+    if (!name || eaters().includes(name)) return;
+    setEaters([...eaters(), name]);
   };
 
   const handleDeleteEater = (eater) => {

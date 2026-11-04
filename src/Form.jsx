@@ -28,7 +28,10 @@ const Form = ({
       const price = Number(formData.get("price"));
       if (!food || !(price > 0)) return;
       accessor()({ food, price, people: [] });
-      ref.reset();
+      // Clear fields through their value setters rather than form.reset():
+      // same result for users, and testing tools can see the change.
+      ref.elements.food.value = "";
+      ref.elements.price.value = "";
       itemInput?.focus();
     };
   };
@@ -97,7 +100,7 @@ const Form = ({
                 type="text"
                 placeholder="e.g. Maria"
                 value={currentEater()}
-                onChange={onChangeEater}
+                onInput={onChangeEater}
                 onkeyup={(event) => {
                   if (event.key === "Enter") {
                     event.preventDefault();

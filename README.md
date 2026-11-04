@@ -51,6 +51,8 @@ Open <http://localhost:3000/ti-fagame-pali/>. The `/ti-fagame-pali/` path is req
 | Command | What it does |
 | --- | --- |
 | `pnpm dev` / `pnpm start` | Starts the dev server on port 3000 |
+| `pnpm test` | Runs the test suite once (also runs in CI before every deploy) |
+| `pnpm test:watch` | Re-runs the tests as you edit |
 | `pnpm build` | Builds for production into the `root/` folder |
 | `pnpm serve` | Serves the production build locally, so you can check it before deploying |
 | `pnpm run deploy` | Publishes `root/` to the `gh-pages` branch manually. Use `run` here, because plain `pnpm deploy` is a different built-in pnpm command |

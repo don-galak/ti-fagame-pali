@@ -3,10 +3,15 @@ import solidPlugin from 'vite-plugin-solid';
 import devtools from 'solid-devtools/vite';
 
 export default defineConfig({
-  plugins: [devtools(), solidPlugin()],
+  plugins: [!process.env.VITEST && devtools(), solidPlugin()].filter(Boolean),
   base: '/ti-fagame-pali/',
   server: {
     port: 3000,
+  },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./src/test/setup.js'],
   },
   build: {
     target: 'esnext',
