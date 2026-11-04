@@ -1,28 +1,35 @@
 import { For, Show } from "solid-js";
 import "./index.css";
 
+const hueFor = (name) => (name.charCodeAt(0) * 7) % 360;
+
+const formatEuro = (amount) => `€${amount.toFixed(2)}`;
+
 const Form = ({
   currentEater,
   handleSubmit,
   handleSubmitFood,
   handleDeleteEater,
   handleDeleteFood,
+  handleTogglePerson,
+  handleToggleEveryone,
   handleShare,
   eaters,
   onChangeEater,
   foodInfo,
 }) => {
+  let itemInput;
+
   const foodSubmitHandler = (ref, accessor) => {
-    ref.onsubmit = async (e) => {
+    ref.onsubmit = (e) => {
       e.preventDefault();
       const formData = new FormData(ref);
-      const data = {
-        food: formData.get("food"),
-        price: formData.get("price"),
-        people: formData.getAll("people"),
-      };
-      accessor()(data);
-      // ref.reset();
+      const food = String(formData.get("food") ?? "").trim();
+      const price = Number(formData.get("price"));
+      if (!food || !(price > 0)) return;
+      accessor()({ food, price, people: [] });
+      ref.reset();
+      itemInput?.focus();
     };
   };
 
@@ -30,23 +37,27 @@ const Form = ({
     handleSubmitFood(data);
   };
 
-  const splitAmountsPerPerson = () => {
-    const amountsToPay = eaters().reduce((acc, eater) => {
-      acc[eater] = 0;
-      return acc;
-    }, {});
+  // Shares are summed unrounded and each person's total is rounded once,
+  // so the amounts add up to the bill instead of drifting by a few cents.
+  const summary = () => {
+    const owed = Object.fromEntries(eaters().map((eater) => [eater, 0]));
+    let billTotal = 0;
+    let unassigned = 0;
 
-    for (const [, entry] of Object.entries(foodInfo)) {
-      const amountPerPerson = Number(
-        (entry.price / entry.people.length).toFixed(2)
-      );
-
-      for (const person of [...entry.people]) {
-        amountsToPay[person] += amountPerPerson;
+    for (const item of foodInfo) {
+      const price = Number(item.price) || 0;
+      billTotal += price;
+      const people = item.people.filter((p) => p in owed);
+      if (people.length === 0) {
+        unassigned += price;
+        continue;
+      }
+      for (const person of people) {
+        owed[person] += price / people.length;
       }
     }
 
-    return Object.entries(amountsToPay);
+    return { owed: Object.entries(owed), billTotal, unassigned };
   };
 
   return (
@@ -87,7 +98,7 @@ const Form = ({
                 placeholder="e.g. Maria"
                 value={currentEater()}
                 onChange={onChangeEater}
-                onkeyup={event => {
+                onkeyup={(event) => {
                   if (event.key === "Enter") {
                     event.preventDefault();
                     handleSubmit();
@@ -104,7 +115,46 @@ const Form = ({
             </div>
           </div>
 
-          <div class="card-title">
+          <div class="checkbox-group people-group">
+            <Show
+              when={eaters().length > 0}
+              fallback={
+                <div class="empty-state">
+                  <span class="empty-icon">👥</span>
+                  <span>No one at the table yet.</span>
+                </div>
+              }
+            >
+              <For each={eaters()}>
+                {(eater) => (
+                  <div class="checkbox-item person-chip">
+                    <span class="avatar" style={`--hue: ${hueFor(eater)}`}>
+                      {eater.charAt(0).toUpperCase()}
+                    </span>
+                    <span class="eater-name">{eater}</span>
+                    <button
+                      type="button"
+                      class="delete-btn"
+                      onClick={() => handleDeleteEater(eater)}
+                      title={`Remove ${eater}`}
+                      aria-label={`Remove ${eater}`}
+                    >
+                      <svg viewBox="0 0 16 16" fill="none">
+                        <path
+                          d="M12 4L4 12M4 4L12 12"
+                          stroke="currentColor"
+                          stroke-width="1.5"
+                          stroke-linecap="round"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+              </For>
+            </Show>
+          </div>
+
+          <div class="card-title section-gap">
             <h3>2. What did you order?</h3>
           </div>
 
@@ -113,10 +163,12 @@ const Form = ({
               <div class="field">
                 <label for="foodInput">Item</label>
                 <input
+                  ref={itemInput}
                   name="food"
                   id="foodInput"
                   type="text"
                   placeholder="e.g. Pizza, house wine"
+                  required
                 />
               </div>
 
@@ -127,67 +179,10 @@ const Form = ({
                   id="priceInput"
                   type="number"
                   step="0.01"
+                  min="0.01"
                   placeholder="12.50"
+                  required
                 />
-              </div>
-            </div>
-
-            <div class="field">
-              <p class="field-label">Who's sharing this?</p>
-              <div class="checkbox-group">
-                <Show
-                  when={eaters().length > 0}
-                  fallback={
-                    <div class="empty-state">
-                      <span class="empty-icon">👥</span>
-                      <span>Add the people at the table first.</span>
-                    </div>
-                  }
-                >
-                  <For each={eaters()}>
-                    {(eater) => (
-                      <label class="checkbox-item">
-                        <input type="checkbox" name="people" value={eater} />
-                        <span class="checkbox-custom">
-                          <svg viewBox="0 0 12 10" fill="none">
-                            <path
-                              d="M1 5L4.5 8.5L11 1"
-                              stroke="currentColor"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                            />
-                          </svg>
-                        </span>
-                        <span
-                          class="avatar"
-                          style={`--hue: ${(eater.charCodeAt(0) * 7) % 360}`}
-                        >
-                          {eater.charAt(0).toUpperCase()}
-                        </span>
-                        <span class="eater-name">{eater}</span>
-                        <button
-                          type="button"
-                          class="delete-btn"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handleDeleteEater(eater);
-                          }}
-                          title={`Remove ${eater}`}
-                        >
-                          <svg viewBox="0 0 16 16" fill="none">
-                            <path
-                              d="M12 4L4 12M4 4L12 12"
-                              stroke="currentColor"
-                              stroke-width="1.5"
-                              stroke-linecap="round"
-                            />
-                          </svg>
-                        </button>
-                      </label>
-                    )}
-                  </For>
-                </Show>
               </div>
             </div>
 
@@ -200,43 +195,118 @@ const Form = ({
 
       <div class="divider"></div>
 
-      <section class="card" aria-label="The bill">
+      <section class="card" aria-label="Who had what">
         <div class="card-title">
-          <h3>The bill</h3>
+          <h3>3. Who had what?</h3>
         </div>
 
-        <ul class="list" aria-label="Bill items">
-          <For each={foodInfo}>
-            {(food, index) => (
-              <li class="list-item">
-                <div class="item-left">
-                  <span class="item-title">{food.food}</span>
-                  <span class="item-meta">
-                    €{food.price} • Shared by {food.people.join(", ")}
-                  </span>
-                </div>
-                <button
-                  class="btn btn-danger"
-                  type="button"
-                  onClick={() => handleDeleteFood(index())}
-                >
-                  Remove
-                </button>
-              </li>
-            )}
-          </For>
-        </ul>
+        <Show
+          when={foodInfo.length > 0}
+          fallback={
+            <div class="empty-state">
+              <span class="empty-icon">🧾</span>
+              <span>Add what you ordered, then tap who had each item.</span>
+            </div>
+          }
+        >
+          <ul class="list" aria-label="Bill items">
+            <For each={foodInfo}>
+              {(item, index) => {
+                const sharers = () =>
+                  item.people.filter((p) => eaters().includes(p));
+                const everyone = () =>
+                  eaters().length > 0 && sharers().length === eaters().length;
+
+                return (
+                  <li class="list-item bill-item">
+                    <div class="bill-item-header">
+                      <div class="item-left">
+                        <span class="item-title">{item.food}</span>
+                        <span class="item-meta">
+                          {formatEuro(Number(item.price))}
+                          <Show
+                            when={sharers().length > 0}
+                            fallback={
+                              <span class="unassigned-tag">
+                                {" "}
+                                • Not assigned yet
+                              </span>
+                            }
+                          >
+                            {" "}
+                            •{" "}
+                            {sharers().length === 1
+                              ? "1 person"
+                              : `${formatEuro(
+                                  Number(item.price) / sharers().length
+                                )} each`}
+                          </Show>
+                        </span>
+                      </div>
+                      <button
+                        class="btn btn-danger"
+                        type="button"
+                        onClick={() => handleDeleteFood(index())}
+                      >
+                        Remove
+                      </button>
+                    </div>
+
+                    <Show
+                      when={eaters().length > 0}
+                      fallback={
+                        <span class="item-meta">
+                          Add the people at the table first.
+                        </span>
+                      }
+                    >
+                      <div
+                        class="chip-row"
+                        role="group"
+                        aria-label={`Who had ${item.food}`}
+                      >
+                        <For each={eaters()}>
+                          {(eater) => (
+                            <button
+                              type="button"
+                              class="chip"
+                              classList={{ "chip-on": sharers().includes(eater) }}
+                              aria-pressed={sharers().includes(eater)}
+                              style={`--hue: ${hueFor(eater)}`}
+                              onClick={() => handleTogglePerson(index(), eater)}
+                            >
+                              {eater}
+                            </button>
+                          )}
+                        </For>
+                        <button
+                          type="button"
+                          class="chip chip-everyone"
+                          classList={{ "chip-on": everyone() }}
+                          aria-pressed={everyone()}
+                          onClick={() => handleToggleEveryone(index())}
+                        >
+                          Everyone
+                        </button>
+                      </div>
+                    </Show>
+                  </li>
+                );
+              }}
+            </For>
+          </ul>
+        </Show>
       </section>
 
       <div class="divider"></div>
 
       <section class="card amounts-card" aria-label="Who owes what">
         <div class="card-title">
-          <h3>3. Who owes what</h3>
+          <h3>4. Who owes what</h3>
         </div>
 
         <Show
-          when={splitAmountsPerPerson().length > 0}
+          when={summary().owed.length > 0}
           fallback={
             <div class="amounts-empty">
               <span class="amounts-empty-icon">🧮</span>
@@ -245,13 +315,13 @@ const Form = ({
           }
         >
           <div class="amounts-grid">
-            <For each={splitAmountsPerPerson()}>
+            <For each={summary().owed}>
               {([person, amount]) => (
                 <div class="amount-card">
                   <div class="amount-header">
                     <span
                       class="amount-avatar"
-                      style={`--hue: ${(person.charCodeAt(0) * 7) % 360}`}
+                      style={`--hue: ${hueFor(person)}`}
                     >
                       {person.charAt(0).toUpperCase()}
                     </span>
@@ -266,14 +336,15 @@ const Form = ({
             </For>
           </div>
 
+          <Show when={summary().unassigned > 0.004}>
+            <div class="unassigned-note">
+              ⚠ {formatEuro(summary().unassigned)} not assigned yet
+            </div>
+          </Show>
+
           <div class="amounts-total">
             <span class="total-label">Bill total</span>
-            <span class="total-value">
-              €
-              {splitAmountsPerPerson()
-                .reduce((sum, [, amount]) => sum + amount, 0)
-                .toFixed(2)}
-            </span>
+            <span class="total-value">{formatEuro(summary().billTotal)}</span>
           </div>
         </Show>
       </section>

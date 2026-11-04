@@ -55,10 +55,30 @@ const App = () => {
 
   const handleDeleteEater = (eater) => {
     setEaters(eaters().filter((e) => e !== eater));
+    setFoodInfo(
+      () => true,
+      "people",
+      (people) => people.filter((p) => p !== eater)
+    );
   };
 
   const handleSubmitFood = (foodData) => {
     setFoodInfo([...foodInfo, foodData]);
+  };
+
+  const handleTogglePerson = (foodIndex, eater) => {
+    setFoodInfo(foodIndex, "people", (people) =>
+      people.includes(eater)
+        ? people.filter((p) => p !== eater)
+        : [...people, eater]
+    );
+  };
+
+  const handleToggleEveryone = (foodIndex) => {
+    const everyone = eaters();
+    setFoodInfo(foodIndex, "people", (people) =>
+      everyone.every((e) => people.includes(e)) ? [] : [...everyone]
+    );
   };
 
   const handleDeleteFood = (foodIndex) => {
@@ -103,6 +123,8 @@ const App = () => {
         handleSubmitFood={handleSubmitFood}
         handleDeleteEater={handleDeleteEater}
         handleDeleteFood={handleDeleteFood}
+        handleTogglePerson={handleTogglePerson}
+        handleToggleEveryone={handleToggleEveryone}
         handleShare={handleShare}
         foodInfo={foodInfo}
       />
