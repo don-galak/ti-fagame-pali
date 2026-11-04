@@ -78,9 +78,9 @@ const App = () => {
       const url = window.location.href;
       try {
         await navigator.clipboard.writeText(url);
-        showToast("Link copied to clipboard!");
+        showToast("Link copied. Send it to the table!");
       } catch {
-        showToast("Link updated in the address bar.");
+        showToast("Copy the link from the address bar to share it.");
       }
     } catch {
       showToast("Something went wrong while creating the share link.");

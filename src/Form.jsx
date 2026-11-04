@@ -52,7 +52,7 @@ const Form = ({
   return (
     <div class="container">
       <div class="header-row">
-        <h2>Food & Eaters</h2>
+        <h2>Split the bill</h2>
         <button class="btn btn-share" type="button" onClick={handleShare}>
           <svg
             viewBox="0 0 24 24"
@@ -68,24 +68,23 @@ const Form = ({
             <polyline points="16 6 12 2 8 6" />
             <line x1="12" y1="2" x2="12" y2="15" />
           </svg>
-          Share link
+          Share with the table
         </button>
       </div>
 
       <div class="grid">
-        <section class="card" aria-label="Eaters Section">
+        <section class="card" aria-label="People and items">
           <div class="card-title">
-            <h3>Eaters</h3>
-            <span class="badge">Manage names</span>
+            <h3>1. Who's at the table?</h3>
           </div>
 
           <div class="field">
-            <label for="eaterInput">Enter eater name</label>
+            <label for="eaterInput">Name</label>
             <div class="row">
               <input
                 id="eaterInput"
                 type="text"
-                placeholder="e.g. John"
+                placeholder="e.g. Maria"
                 value={currentEater()}
                 onChange={onChangeEater}
                 onkeyup={event => {
@@ -100,25 +99,24 @@ const Form = ({
                 type="button"
                 onClick={handleSubmit}
               >
-                Add eater
+                Add person
               </button>
             </div>
           </div>
 
           <div class="card-title">
-            <h3>Food info</h3>
-            <span class="badge">Add foods</span>
+            <h3>2. What did you order?</h3>
           </div>
 
           <form use:foodSubmitHandler={onSubmitFood}>
             <div class="form-row">
               <div class="field">
-                <label for="foodInput">Food name</label>
+                <label for="foodInput">Item</label>
                 <input
                   name="food"
                   id="foodInput"
                   type="text"
-                  placeholder="e.g. Pizza"
+                  placeholder="e.g. Pizza, house wine"
                 />
               </div>
 
@@ -135,14 +133,14 @@ const Form = ({
             </div>
 
             <div class="field">
-              <p class="field-label">Who ate it?</p>
+              <p class="field-label">Who's sharing this?</p>
               <div class="checkbox-group">
                 <Show
                   when={eaters().length > 0}
                   fallback={
                     <div class="empty-state">
                       <span class="empty-icon">👥</span>
-                      <span>No eaters yet. Add someone above!</span>
+                      <span>Add the people at the table first.</span>
                     </div>
                   }
                 >
@@ -194,7 +192,7 @@ const Form = ({
             </div>
 
             <button class="btn btn-primary" type="submit">
-              Add food
+              Add to the bill
             </button>
           </form>
         </section>
@@ -202,20 +200,19 @@ const Form = ({
 
       <div class="divider"></div>
 
-      <section class="card" aria-label="Foods List Section">
+      <section class="card" aria-label="The bill">
         <div class="card-title">
-          <h3>Provided foods</h3>
-          <span class="badge">History</span>
+          <h3>The bill</h3>
         </div>
 
-        <ul class="list" aria-label="Foods list">
+        <ul class="list" aria-label="Bill items">
           <For each={foodInfo}>
             {(food, index) => (
               <li class="list-item">
                 <div class="item-left">
                   <span class="item-title">{food.food}</span>
                   <span class="item-meta">
-                    €{food.price} • Eaten by: {food.people.join(", ")}
+                    €{food.price} • Shared by {food.people.join(", ")}
                   </span>
                 </div>
                 <button
@@ -223,7 +220,7 @@ const Form = ({
                   type="button"
                   onClick={() => handleDeleteFood(index())}
                 >
-                  Delete
+                  Remove
                 </button>
               </li>
             )}
@@ -233,10 +230,9 @@ const Form = ({
 
       <div class="divider"></div>
 
-      <section class="card amounts-card" aria-label="Amounts Section">
+      <section class="card amounts-card" aria-label="Who owes what">
         <div class="card-title">
-          <h3>Split amounts per person</h3>
-          <span class="badge badge-green">💰 Summary</span>
+          <h3>3. Who owes what</h3>
         </div>
 
         <Show
@@ -244,7 +240,7 @@ const Form = ({
           fallback={
             <div class="amounts-empty">
               <span class="amounts-empty-icon">🧮</span>
-              <span>Add eaters and foods to see the split</span>
+              <span>Add people and items to see who owes what.</span>
             </div>
           }
         >
@@ -271,7 +267,7 @@ const Form = ({
           </div>
 
           <div class="amounts-total">
-            <span class="total-label">Total</span>
+            <span class="total-label">Bill total</span>
             <span class="total-value">
               €
               {splitAmountsPerPerson()
