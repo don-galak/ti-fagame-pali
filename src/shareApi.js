@@ -8,11 +8,10 @@ export class ShareNotFoundError extends Error {}
 const apiUrl = () =>
   (import.meta.env.VITE_SHARE_API_URL ?? "").replace(/\/+$/, "");
 
-export const hasShareApi = () => apiUrl() !== "";
-
 export const isShortId = (value) => SHORT_ID.test(value);
 
 export async function saveBill(bill) {
+  if (!apiUrl()) throw new Error("VITE_SHARE_API_URL is not set");
   const response = await fetch(`${apiUrl()}/share`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

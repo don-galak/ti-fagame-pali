@@ -61,8 +61,6 @@ const owed = (name) => {
 
 const billTotal = () => document.querySelector(".total-value").textContent;
 
-const encodeState = (state) => btoa(JSON.stringify(state));
-
 // ---------- tests ----------
 
 describe("empty app", () => {
@@ -283,161 +281,98 @@ describe("4. Who owes what", () => {
 });
 
 describe("sharing", () => {
-  it("copies a link that restores the whole bill", async () => {
+  const API = "https://api.test";
+
+  // A fake share server: POST stores the bill, GET returns it.
+  const useFakeApi = ({ down = false } = {}) => {
+    const bills = new Map();
+    let nextId = 0;
+    const reply = (body, status) => ({
+      ok: status >= 200 && status < 300,
+      status,
+      json: async () => body,
+    });
+    const fetchMock = vi.fn(async (url, options = {}) => {
+      if (down) throw new TypeError("Failed to fetch");
+      if (options.method === "POST" && url === `${API}/share`) {
+        const id = `bill${String(nextId++).padStart(4, "0")}`;
+        bills.set(id, JSON.parse(options.body));
+        return reply({ id }, 201);
+      }
+      const id = url.match(/\/share\/([a-z0-9]{8})$/)?.[1];
+      return bills.has(id) ? reply(bills.get(id), 200) : reply({}, 404);
+    });
+    vi.stubEnv("VITE_SHARE_API_URL", `${API}/`);
+    vi.stubGlobal("fetch", fetchMock);
+    return { fetchMock, bills };
+  };
+
+  const share = (user) =>
+    user.click(screen.getByRole("button", { name: /Share with the table/ }));
+
+  it("saves the bill and copies a short link", async () => {
+    const { fetchMock, bills } = useFakeApi();
     const user = setup();
     await addPerson(user, "Maria");
-    await addPerson(user, "Nikos");
     await addItem(user, "Pizza", 12);
-    await addItem(user, "Wine", 14);
-    await toggle(user, "Pizza", "Maria");
-
-    await user.click(
-      screen.getByRole("button", { name: /Share with the table/ })
-    );
+    await share(user);
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Link copied. Send it to the table!"
     );
-    const link = await navigator.clipboard.readText();
-    expect(link).toBe(window.location.href);
-    expect(window.location.hash.length).toBeGreaterThan(1);
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${API}/share`,
+      expect.objectContaining({ method: "POST" })
+    );
+    expect(bills.get("bill0000")).toEqual({
+      eaters: ["Maria"],
+      foodInfo: [{ food: "Pizza", price: 12, people: [] }],
+    });
+    expect(window.location.hash).toBe("#bill0000");
+    expect(await navigator.clipboard.readText()).toBe(window.location.href);
+  });
+
+  it("opens the same bill for a friend who follows the link", async () => {
+    useFakeApi();
+    const user = setup();
+    await addPerson(user, "Μαρία");
+    await addPerson(user, "Nikos");
+    await addItem(user, "Χωριάτικη", 12);
+    await addItem(user, "Wine", 14);
+    await toggle(user, "Χωριάτικη", "Μαρία");
+    await share(user);
+    await screen.findByRole("alert");
 
     // A friend opens the link.
     cleanup();
     render(() => <App />);
 
-    expect(people()).toEqual(["Maria", "Nikos"]);
-    expect(billItems()).toHaveLength(2);
-    expect(chip("Pizza", "Maria")).toHaveAttribute("aria-pressed", "true");
-    expect(billItem("Wine")).toHaveTextContent("Not assigned yet");
-    expect(owed("Maria")).toBe("12.00");
-    expect(billTotal()).toBe("€26.00");
-  });
-
-  it("restores names and items with non-English characters", async () => {
-    const state = {
-      eaters: ["Μαρία", "Νίκος"],
-      foodInfo: [{ food: "Χωριάτικη", price: 8, people: ["Μαρία", "Νίκος"] }],
-    };
-    const bytes = new TextEncoder().encode(JSON.stringify(state));
-    window.location.hash = btoa(String.fromCharCode(...bytes));
-    render(() => <App />);
-
-    expect(people()).toEqual(["Μαρία", "Νίκος"]);
-    expect(billItem("Χωριάτικη")).toHaveTextContent("€4.00 each");
-  });
-
-  it("opens links made by the previous version of the app", () => {
-    // Older links stored the price as a string and always had people assigned.
-    window.location.hash = encodeState({
-      eaters: ["Maria", "Nikos"],
-      foodInfo: [{ food: "Pizza", price: "12", people: ["Maria", "Nikos"] }],
-    });
-    render(() => <App />);
-
-    expect(billItem("Pizza")).toHaveTextContent("€6.00 each");
-    expect(owed("Maria")).toBe("6.00");
-    expect(billTotal()).toBe("€12.00");
-  });
-
-  it("shows an error for a corrupted link", async () => {
-    window.location.hash = "%%%not-base64";
-    render(() => <App />);
-
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Could not read the shared link"
-    );
-    expect(people()).toEqual([]);
-  });
-
-  it("shows an error for a link with missing data", async () => {
-    window.location.hash = encodeState({ eaters: ["Maria"] });
-    render(() => <App />);
-
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Shared link data is incomplete or invalid."
-    );
-    expect(people()).toEqual([]);
-  });
-});
-
-describe("short links", () => {
-  const API = "https://api.test";
-  const ID = "k3x9pq2a";
-
-  const reply = (body, status = 200) =>
-    Promise.resolve({
-      ok: status >= 200 && status < 300,
-      status,
-      json: async () => body,
-    });
-
-  const useApi = (impl) => {
-    vi.stubEnv("VITE_SHARE_API_URL", `${API}/`);
-    const fetchMock = vi.fn(impl);
-    vi.stubGlobal("fetch", fetchMock);
-    return fetchMock;
-  };
-
-  it("shares a short link when the share server is up", async () => {
-    const fetchMock = useApi(() => reply({ id: ID }, 201));
-    const user = setup();
-    await addPerson(user, "Maria");
-    await addItem(user, "Pizza", 12);
-
-    await user.click(screen.getByRole("button", { name: /Share with the table/ }));
-
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Link copied. Send it to the table!"
-    );
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    const [url, options] = fetchMock.mock.calls[0];
-    expect(url).toBe(`${API}/share`);
-    expect(options.method).toBe("POST");
-    expect(JSON.parse(options.body)).toEqual({
-      eaters: ["Maria"],
-      foodInfo: [{ food: "Pizza", price: 12, people: [] }],
-    });
-    expect(window.location.hash).toBe(`#${ID}`);
-    expect(await navigator.clipboard.readText()).toMatch(new RegExp(`#${ID}$`));
-  });
-
-  it("falls back to a long link when the share server is down", async () => {
-    useApi(() => Promise.reject(new TypeError("Failed to fetch")));
-    const user = setup();
-    await addPerson(user, "Maria");
-    await user.click(screen.getByRole("button", { name: /Share with the table/ }));
-
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      "the share server didn't respond"
-    );
-    const hash = window.location.hash.slice(1);
-    expect(hash).not.toMatch(/^[a-z0-9]{8}$/);
-    expect(JSON.parse(atob(hash)).eaters).toEqual(["Maria"]);
-  });
-
-  it("loads the bill behind a short link", async () => {
-    const fetchMock = useApi(() =>
-      reply({
-        eaters: ["Maria", "Nikos"],
-        foodInfo: [{ food: "Pizza", price: 12, people: ["Maria", "Nikos"] }],
-      })
-    );
-    window.location.hash = ID;
-    render(() => <App />);
-
     expect(screen.getByRole("status")).toHaveTextContent("Loading the bill");
     await screen.findByRole("list", { name: "Bill items" });
 
-    expect(fetchMock).toHaveBeenCalledWith(`${API}/share/${ID}`);
-    expect(people()).toEqual(["Maria", "Nikos"]);
-    expect(billItem("Pizza")).toHaveTextContent("€6.00 each");
-    expect(billTotal()).toBe("€12.00");
+    expect(people()).toEqual(["Μαρία", "Nikos"]);
+    expect(chip("Χωριάτικη", "Μαρία")).toHaveAttribute("aria-pressed", "true");
+    expect(billItem("Wine")).toHaveTextContent("Not assigned yet");
+    expect(owed("Μαρία")).toBe("12.00");
+    expect(billTotal()).toBe("€26.00");
   });
 
-  it("explains when a short link has expired", async () => {
-    useApi(() => reply({ error: "Not found" }, 404));
-    window.location.hash = ID;
+  it("shows an error and changes nothing when the share server is down", async () => {
+    useFakeApi({ down: true });
+    const user = setup();
+    await addPerson(user, "Maria");
+    await share(user);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Couldn't create a link."
+    );
+    expect(window.location.hash).toBe("");
+    expect(people()).toEqual(["Maria"]);
+  });
+
+  it("explains when a link has expired", async () => {
+    useFakeApi();
+    window.location.hash = "gone1234";
     render(() => <App />);
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
@@ -447,13 +382,24 @@ describe("short links", () => {
     expect(people()).toEqual([]);
   });
 
-  it("explains when a short link can't be loaded", async () => {
-    useApi(() => Promise.reject(new TypeError("Failed to fetch")));
-    window.location.hash = ID;
+  it("explains when a bill can't be loaded", async () => {
+    useFakeApi({ down: true });
+    window.location.hash = "bill0000";
     render(() => <App />);
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Couldn't load the shared bill"
     );
+  });
+
+  it("rejects links that aren't share links", async () => {
+    const { fetchMock } = useFakeApi();
+    window.location.hash = "eyJlYXRlcnMiOltdLCJmb29kSW5mbyI6W119";
+    render(() => <App />);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "This link isn't valid."
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

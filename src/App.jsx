@@ -3,56 +3,28 @@ import { createStore } from "solid-js/store";
 import Form from "./Form";
 import Toast from "./Toast";
 import {
-  hasShareApi,
   isShortId,
   loadBill,
   saveBill,
   ShareNotFoundError,
 } from "./shareApi";
 
-function toBase64(str) {
-  const bytes = new TextEncoder().encode(str);
-  const binary = Array.from(bytes, (b) => String.fromCharCode(b)).join("");
-  return btoa(binary);
-}
-
-function fromBase64(encoded) {
-  const binary = atob(encoded);
-  const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
-  return new TextDecoder().decode(bytes);
-}
-
 const isValidState = (state) =>
   Array.isArray(state?.eaters) && Array.isArray(state?.foodInfo);
-
-// Long links (the bill encoded in the URL) are still supported, both for
-// links shared before short links existed and as a fallback when the share
-// API can't be reached.
-function decodeHashState(hash) {
-  if (!hash) return { state: null, error: null };
-  try {
-    const state = JSON.parse(fromBase64(hash));
-    if (isValidState(state)) return { state, error: null };
-    return { state: null, error: "Shared link data is incomplete or invalid." };
-  } catch {
-    return { state: null, error: "Could not read the shared link — it may be corrupted." };
-  }
-}
 
 const App = () => {
   const hash = window.location.hash.slice(1);
   const shortId = isShortId(hash) ? hash : null;
-  const { state: restored, error: hashError } = shortId
-    ? { state: null, error: null }
-    : decodeHashState(hash);
 
-  const [toastMessage, setToastMessage] = createSignal(hashError);
+  const [toastMessage, setToastMessage] = createSignal(
+    hash && !shortId ? "This link isn't valid." : null
+  );
   const [loading, setLoading] = createSignal(Boolean(shortId));
   const [sharing, setSharing] = createSignal(false);
 
   const [currentEater, setCurrentEater] = createSignal("");
-  const [eaters, setEaters] = createSignal(restored?.eaters ?? []);
-  const [foodInfo, setFoodInfo] = createStore(restored?.foodInfo ?? []);
+  const [eaters, setEaters] = createSignal([]);
+  const [foodInfo, setFoodInfo] = createStore([]);
 
   const onChangeEater = (e) => {
     e.preventDefault();
@@ -126,30 +98,17 @@ const App = () => {
     setSharing(true);
     try {
       const state = { eaters: eaters(), foodInfo: [...foodInfo] };
-
-      let id = null;
-      if (hasShareApi()) {
-        try {
-          id = await saveBill(state);
-        } catch {
-          id = null; // fall back to a long link below
-        }
-      }
-      window.location.hash = id ?? toBase64(JSON.stringify(state));
+      window.location.hash = await saveBill(state);
 
       const url = window.location.href;
       try {
         await navigator.clipboard.writeText(url);
-        showToast(
-          id || !hasShareApi()
-            ? "Link copied. Send it to the table!"
-            : "Link copied (long version, the share server didn't respond)."
-        );
+        showToast("Link copied. Send it to the table!");
       } catch {
         showToast("Copy the link from the address bar to share it.");
       }
     } catch {
-      showToast("Something went wrong while creating the share link.");
+      showToast("Couldn't create a link. Check your connection and try again.");
     } finally {
       setSharing(false);
     }

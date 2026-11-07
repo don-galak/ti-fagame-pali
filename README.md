@@ -62,7 +62,7 @@ Open <http://localhost:3000/ti-fagame-pali/>. The `/ti-fagame-pali/` path is req
 "Share with the table" saves the bill to a small Cloudflare Worker ([`worker/`](worker/)) backed by Workers KV and copies a short link like `…/ti-fagame-pali/#k3x9pq2a`. Links expire after 30 days.
 
 - The app finds the Worker through `VITE_SHARE_API_URL`: [`.env.development`](.env.development) points at the local Worker, [`.env.production`](.env.production) at the deployed one.
-- If the Worker can't be reached, the app falls back to a long link with the whole bill in the URL, so sharing never breaks. Old long links keep working too.
+- If the Worker can't be reached, sharing shows an error and nothing is lost: the bill stays on screen so you can try again.
 
 | Command | What it does |
 | --- | --- |
