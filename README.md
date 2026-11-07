@@ -57,9 +57,23 @@ Open <http://localhost:3000/ti-fagame-pali/>. The `/ti-fagame-pali/` path is req
 | `pnpm serve` | Serves the production build locally, so you can check it before deploying |
 | `pnpm run deploy` | Publishes `root/` to the `gh-pages` branch manually. Use `run` here, because plain `pnpm deploy` is a different built-in pnpm command |
 
+## Share links
+
+"Share with the table" saves the bill to a small Cloudflare Worker ([`worker/`](worker/)) backed by Workers KV and copies a short link like `…/ti-fagame-pali/#k3x9pq2a`. Links expire after 30 days.
+
+- The app finds the Worker through `VITE_SHARE_API_URL`: [`.env.development`](.env.development) points at the local Worker, [`.env.production`](.env.production) at the deployed one.
+- If the Worker can't be reached, the app falls back to a long link with the whole bill in the URL, so sharing never breaks. Old long links keep working too.
+
+| Command | What it does |
+| --- | --- |
+| `pnpm api:dev` | Runs the Worker locally on <http://localhost:8787> with a local KV store |
+| `pnpm api:deploy` | Deploys the Worker to Cloudflare |
+
+To work on sharing locally, run `pnpm api:dev` and `pnpm dev` in two terminals.
+
 ## Deployment
 
-Every push to `main` triggers [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml). It builds the app with pnpm 12 and the Node version in `.nvmrc`, then publishes it to GitHub Pages:
+The Worker is deployed separately with `pnpm api:deploy`. For the site, every push to `main` triggers [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml). It builds the app with pnpm 12 and the Node version in `.nvmrc`, then publishes it to GitHub Pages:
 
 <https://don-galak.github.io/ti-fagame-pali/>
 

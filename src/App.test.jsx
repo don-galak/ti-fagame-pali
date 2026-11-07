@@ -1,6 +1,6 @@
 import { cleanup, render, screen, within } from "@solidjs/testing-library";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import App from "./App";
 
 // ---------- helpers ----------
@@ -358,5 +358,102 @@ describe("sharing", () => {
       "Shared link data is incomplete or invalid."
     );
     expect(people()).toEqual([]);
+  });
+});
+
+describe("short links", () => {
+  const API = "https://api.test";
+  const ID = "k3x9pq2a";
+
+  const reply = (body, status = 200) =>
+    Promise.resolve({
+      ok: status >= 200 && status < 300,
+      status,
+      json: async () => body,
+    });
+
+  const useApi = (impl) => {
+    vi.stubEnv("VITE_SHARE_API_URL", `${API}/`);
+    const fetchMock = vi.fn(impl);
+    vi.stubGlobal("fetch", fetchMock);
+    return fetchMock;
+  };
+
+  it("shares a short link when the share server is up", async () => {
+    const fetchMock = useApi(() => reply({ id: ID }, 201));
+    const user = setup();
+    await addPerson(user, "Maria");
+    await addItem(user, "Pizza", 12);
+
+    await user.click(screen.getByRole("button", { name: /Share with the table/ }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Link copied. Send it to the table!"
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, options] = fetchMock.mock.calls[0];
+    expect(url).toBe(`${API}/share`);
+    expect(options.method).toBe("POST");
+    expect(JSON.parse(options.body)).toEqual({
+      eaters: ["Maria"],
+      foodInfo: [{ food: "Pizza", price: 12, people: [] }],
+    });
+    expect(window.location.hash).toBe(`#${ID}`);
+    expect(await navigator.clipboard.readText()).toMatch(new RegExp(`#${ID}$`));
+  });
+
+  it("falls back to a long link when the share server is down", async () => {
+    useApi(() => Promise.reject(new TypeError("Failed to fetch")));
+    const user = setup();
+    await addPerson(user, "Maria");
+    await user.click(screen.getByRole("button", { name: /Share with the table/ }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "the share server didn't respond"
+    );
+    const hash = window.location.hash.slice(1);
+    expect(hash).not.toMatch(/^[a-z0-9]{8}$/);
+    expect(JSON.parse(atob(hash)).eaters).toEqual(["Maria"]);
+  });
+
+  it("loads the bill behind a short link", async () => {
+    const fetchMock = useApi(() =>
+      reply({
+        eaters: ["Maria", "Nikos"],
+        foodInfo: [{ food: "Pizza", price: 12, people: ["Maria", "Nikos"] }],
+      })
+    );
+    window.location.hash = ID;
+    render(() => <App />);
+
+    expect(screen.getByRole("status")).toHaveTextContent("Loading the bill");
+    await screen.findByRole("list", { name: "Bill items" });
+
+    expect(fetchMock).toHaveBeenCalledWith(`${API}/share/${ID}`);
+    expect(people()).toEqual(["Maria", "Nikos"]);
+    expect(billItem("Pizza")).toHaveTextContent("€6.00 each");
+    expect(billTotal()).toBe("€12.00");
+  });
+
+  it("explains when a short link has expired", async () => {
+    useApi(() => reply({ error: "Not found" }, 404));
+    window.location.hash = ID;
+    render(() => <App />);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "This link has expired or doesn't exist."
+    );
+    expect(screen.queryByRole("status")).toBeNull();
+    expect(people()).toEqual([]);
+  });
+
+  it("explains when a short link can't be loaded", async () => {
+    useApi(() => Promise.reject(new TypeError("Failed to fetch")));
+    window.location.hash = ID;
+    render(() => <App />);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Couldn't load the shared bill"
+    );
   });
 });

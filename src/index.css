@@ -966,3 +966,10 @@ select:focus {
     width: auto;
   }
 }
+
+.loading-bill {
+  text-align: center;
+  color: #64748b;
+  font-size: 15px;
+  padding: 48px 28px;
+}

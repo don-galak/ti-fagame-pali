@@ -1,7 +1,14 @@
-import { createSignal, Show } from "solid-js";
+import { createSignal, onMount, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import Form from "./Form";
 import Toast from "./Toast";
+import {
+  hasShareApi,
+  isShortId,
+  loadBill,
+  saveBill,
+  ShareNotFoundError,
+} from "./shareApi";
 
 function toBase64(str) {
   const bytes = new TextEncoder().encode(str);
@@ -15,15 +22,17 @@ function fromBase64(encoded) {
   return new TextDecoder().decode(bytes);
 }
 
-function decodeHashState() {
-  const hash = window.location.hash.slice(1);
+const isValidState = (state) =>
+  Array.isArray(state?.eaters) && Array.isArray(state?.foodInfo);
+
+// Long links (the bill encoded in the URL) are still supported, both for
+// links shared before short links existed and as a fallback when the share
+// API can't be reached.
+function decodeHashState(hash) {
   if (!hash) return { state: null, error: null };
   try {
-    const json = fromBase64(hash);
-    const state = JSON.parse(json);
-    if (Array.isArray(state.eaters) && Array.isArray(state.foodInfo)) {
-      return { state, error: null };
-    }
+    const state = JSON.parse(fromBase64(hash));
+    if (isValidState(state)) return { state, error: null };
     return { state: null, error: "Shared link data is incomplete or invalid." };
   } catch {
     return { state: null, error: "Could not read the shared link — it may be corrupted." };
@@ -31,8 +40,15 @@ function decodeHashState() {
 }
 
 const App = () => {
-  const { state: restored, error: hashError } = decodeHashState();
+  const hash = window.location.hash.slice(1);
+  const shortId = isShortId(hash) ? hash : null;
+  const { state: restored, error: hashError } = shortId
+    ? { state: null, error: null }
+    : decodeHashState(hash);
+
   const [toastMessage, setToastMessage] = createSignal(hashError);
+  const [loading, setLoading] = createSignal(Boolean(shortId));
+  const [sharing, setSharing] = createSignal(false);
 
   const [currentEater, setCurrentEater] = createSignal("");
   const [eaters, setEaters] = createSignal(restored?.eaters ?? []);
@@ -87,20 +103,55 @@ const App = () => {
     queueMicrotask(() => setToastMessage(msg));
   };
 
+  onMount(async () => {
+    if (!shortId) return;
+    try {
+      const state = await loadBill(shortId);
+      if (!isValidState(state)) throw new Error("Invalid bill");
+      setEaters(state.eaters);
+      setFoodInfo(state.foodInfo);
+    } catch (error) {
+      showToast(
+        error instanceof ShareNotFoundError
+          ? "This link has expired or doesn't exist."
+          : "Couldn't load the shared bill. Check your connection and refresh."
+      );
+    } finally {
+      setLoading(false);
+    }
+  });
+
   const handleShare = async () => {
+    if (sharing()) return;
+    setSharing(true);
     try {
       const state = { eaters: eaters(), foodInfo: [...foodInfo] };
-      const hash = toBase64(JSON.stringify(state));
-      window.location.hash = hash;
+
+      let id = null;
+      if (hasShareApi()) {
+        try {
+          id = await saveBill(state);
+        } catch {
+          id = null; // fall back to a long link below
+        }
+      }
+      window.location.hash = id ?? toBase64(JSON.stringify(state));
+
       const url = window.location.href;
       try {
         await navigator.clipboard.writeText(url);
-        showToast("Link copied. Send it to the table!");
+        showToast(
+          id || !hasShareApi()
+            ? "Link copied. Send it to the table!"
+            : "Link copied (long version, the share server didn't respond)."
+        );
       } catch {
         showToast("Copy the link from the address bar to share it.");
       }
     } catch {
       showToast("Something went wrong while creating the share link.");
+    } finally {
+      setSharing(false);
     }
   };
 
@@ -112,6 +163,14 @@ const App = () => {
           onDone={() => setToastMessage(null)}
         />
       </Show>
+      <Show
+        when={!loading()}
+        fallback={
+          <div class="container loading-bill" role="status">
+            Loading the bill…
+          </div>
+        }
+      >
       <Form
         currentEater={currentEater}
         eaters={eaters}
@@ -125,6 +184,7 @@ const App = () => {
         handleShare={handleShare}
         foodInfo={foodInfo}
       />
+      </Show>
     </>
   );
 };

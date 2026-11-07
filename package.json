@@ -11,6 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "deploy": "gh-pages -d root",
+    "api:dev": "wrangler dev --config worker/wrangler.jsonc",
+    "api:deploy": "wrangler deploy --config worker/wrangler.jsonc",
     "report": "vitest run > test-output.txt 2>&1"
   },
   "license": "MIT",
@@ -24,7 +26,8 @@
     "typescript": "^5.7.2",
     "vite": "^7.1.4",
     "vite-plugin-solid": "^2.11.8",
-    "vitest": "^5.1.0"
+    "vitest": "^5.1.0",
+    "wrangler": "^4.158.0"
   },
   "dependencies": {
     "solid-js": "^1.9.5"

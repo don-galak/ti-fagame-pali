@@ -12,6 +12,8 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/test/setup.js'],
+    unstubEnvs: true,
+    unstubGlobals: true,
   },
   build: {
     target: 'esnext',

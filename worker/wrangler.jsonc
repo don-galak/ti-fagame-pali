@@ -1,0 +1,15 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "ti-fagame-pali-api",
+  "main": "src/index.js",
+  "compatibility_date": "2026-06-01",
+  "kv_namespaces": [
+    {
+      "binding": "SHARES",
+      "id": "0f40dfa6d79e49cf88994ec09c1fb84c"
+    }
+  ],
+  "vars": {
+    "ALLOWED_ORIGINS": "https://don-galak.github.io"
+  }
+}
